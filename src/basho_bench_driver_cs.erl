@@ -33,46 +33,46 @@
 %% ====================================================================
 
 new(_Id) ->
-	%% Ensure that erlcloud is up
-	erlcloud:start(),
+    %% Ensure that erlcloud is up
+    erlcloud:start(),
 
-	%% Configure erlcloud
-	AccessKey = basho_bench_config:get(cs_access_key),
-	SecretKey = basho_bench_config:get(cs_secret_key),
-	Host      = basho_bench_config:get(cs_host, "localhost"),
-	Port      = basho_bench_config:get(cs_port,  8080),
-	Protocol  = basho_bench_config:get(cs_protocol, "https"),
-	Bucket    = basho_bench_config:get(cs_bucket, "bench_test"),
+    %% Configure erlcloud
+    AccessKey = basho_bench_config:get(cs_access_key),
+    SecretKey = basho_bench_config:get(cs_secret_key),
+    Host      = basho_bench_config:get(cs_host, "localhost"),
+    Port      = basho_bench_config:get(cs_port,  8080),
+    Protocol  = basho_bench_config:get(cs_protocol, "https"),
+    Bucket    = basho_bench_config:get(cs_bucket, "bench_test"),
 
-	erlcloud_s3:configure(AccessKey, SecretKey, Host, Port, Protocol),
-	erlcloud_s3:create_bucket(Bucket),
+    erlcloud_s3:configure(AccessKey, SecretKey, Host, Port, Protocol),
+    erlcloud_s3:create_bucket(Bucket),
 
-	{ok, #state {bucket=Bucket}}.
+    {ok, #state {bucket=Bucket}}.
 
 
 run(put, KeyGen, ValueGen, State) ->
-	Key = KeyGen(),
-	Value = ValueGen(),
-	erlcloud_s3:put_object(State#state.bucket, integer_to_list(Key), Value),
-	{ok, State};
+    Key = KeyGen(),
+    Value = ValueGen(),
+    erlcloud_s3:put_object(State#state.bucket, integer_to_list(Key), Value),
+    {ok, State};
 
 run(get, KeyGen, _ValueGen, State) ->
-	Key = KeyGen(),
-	try
-		erlcloud_s3:get_object(State#state.bucket, integer_to_list(Key)),
-    	{ok, State}
-	catch _X:_Y ->
-        ?ERROR("Error on ~p: ~p ~p\n", [Key, _X, _Y]),
-		{error, object_not_found, State}
-	end;
+    Key = KeyGen(),
+    try
+        erlcloud_s3:get_object(State#state.bucket, integer_to_list(Key)),
+        {ok, State}
+    catch _X:_Y ->
+            ?ERROR("Error on ~p: ~p ~p\n", [Key, _X, _Y]),
+            {error, object_not_found, State}
+    end;
 
 run(delete, KeyGen, _ValueGen, State) ->
-	try
-		Key = KeyGen(),
-		erlcloud_s3:delete_object(State#state.bucket, integer_to_list(Key)),
-		{ok, State}
-	catch _X:_Y ->
-%%        ?ERROR("Error on ~p: ~p ~p\n", [Key, _X, _Y]),
-		{ok, State}
-	end.
+    try
+        Key = KeyGen(),
+        erlcloud_s3:delete_object(State#state.bucket, integer_to_list(Key)),
+        {ok, State}
+    catch _X:_Y ->
+            %%        ?ERROR("Error on ~p: ~p ~p\n", [Key, _X, _Y]),
+            {ok, State}
+    end.
 
