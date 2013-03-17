@@ -42,9 +42,17 @@ new(_Id) ->
     Host      = basho_bench_config:get(cs_host, "localhost"),
     Port      = basho_bench_config:get(cs_port,  8080),
     Protocol  = basho_bench_config:get(cs_protocol, "https"),
+    ProxyHost = basho_bench_config:get(cs_proxy_host, undefined),
+    ProxyPort = basho_bench_config:get(cs_proxy_port,  8080),
     Bucket    = basho_bench_config:get(cs_bucket, "bench_test"),
 
-    erlcloud_s3:configure(AccessKey, SecretKey, Host, Port, Protocol),
+    case ProxyHost of
+        undefined ->
+            erlcloud_s3:configure(AccessKey, SecretKey, Host, Port, Protocol);
+        _ ->
+            erlcloud_s3:configure(AccessKey, SecretKey, Host, Port, Protocol,
+                                  ProxyHost, ProxyPort, [])
+    end,
     erlcloud_s3:create_bucket(Bucket),
 
     {ok, #state {bucket=Bucket}}.
