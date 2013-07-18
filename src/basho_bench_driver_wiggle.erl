@@ -8,7 +8,7 @@
 -record(state, {
           proto,
           token,
-          host,
+          hosts,
           base_path,
           version,
           endpoint,
@@ -57,16 +57,17 @@ new(_) ->
     erlang:put(disconnect_freq, Disconnect),
 
     Token     = basho_bench_config:get(wiggle_token),
-    Host      = basho_bench_config:get(wiggle_host, "127.0.0.1"),
+    Hosts     = basho_bench_config:get(wiggle_hosts, ["127.0.0.1"]),
     Port      = basho_bench_config:get(wiggle_port, 80),
     BasePath  = basho_bench_config:get(wiggle_base_path, ""),
     Version   = basho_bench_config:get(wiggle_api_version, "0.1.0"),
     Endpoint  = basho_bench_config:get(wiggle_endpoint, "packages"),
     Keys      = basho_bench_config:get(wiggle_initial_keys, []),
-    BaseUrls  = {#url{host = Host,
-                      port = Port,
-                      path = BasePath ++ "/api/" ++ Version ++ "/" ++ Endpoint
-                     }},
+    BaseUrls  = list_to_tuple([#url{host = Host,
+                                    port = Port,
+                                    path = BasePath ++ "/api/" ++ Version ++
+                                        "/" ++ Endpoint
+                                   } || Host <- Hosts]),
     BaseUrlsIndex = random:uniform(tuple_size(BaseUrls)),
 
     erlang:put(token, Token),
@@ -74,7 +75,7 @@ new(_) ->
     {ok, #state{
             base_urls = BaseUrls,
             base_urls_index = BaseUrlsIndex,
-            host = Host,
+            hosts = Hosts,
             port = Port,
             proto = Proto,
             token = Token,
